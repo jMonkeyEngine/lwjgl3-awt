@@ -11,3 +11,11 @@
 /*.iml
 /dependency-reduced-pom.xml
 .DS_Store
+.csporter/
+.idea/
+bin/
+build/
+dependency-reduced-pom.xml
+target/
+.gradle
+.vscode

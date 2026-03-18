@@ -1,0 +1,208 @@
+plugins {
+    id 'java-library'
+    id 'maven-publish'
+    id 'signing'
+    id 'io.github.gradle-nexus.publish-plugin' version '2.0.0'
+}
+
+group = 'org.jmonkeyengine'
+description = 'LWJGL3 AWT integration for OpenGL and Vulkan'
+
+def defaultVersion = '0.2.4'
+def releaseVersion = (findProperty('releaseVersion') ?: System.getenv('RELEASE_VERSION'))?.toString()
+version = releaseVersion ?: defaultVersion
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Required compile-time APIs (consumers must provide LWJGL)
+    compileOnly libs.lwjgl
+    compileOnly libs.lwjgl.jawt
+    // Optional: consumers only need these if they use OpenGL or Vulkan
+    compileOnly libs.lwjgl.opengl
+    compileOnly libs.lwjgl.vulkan
+
+    // Test: full runtime with natives
+    testImplementation libs.lwjgl
+    testImplementation libs.lwjgl.jawt
+    testImplementation libs.lwjgl.opengl
+    testImplementation libs.lwjgl.vulkan
+    testRuntimeOnly "org.lwjgl:lwjgl:${libs.versions.lwjgl.get()}:natives-linux"
+    testRuntimeOnly "org.lwjgl:lwjgl:${libs.versions.lwjgl.get()}:natives-linux-arm64"
+    testRuntimeOnly "org.lwjgl:lwjgl:${libs.versions.lwjgl.get()}:natives-linux-arm32"
+    testRuntimeOnly "org.lwjgl:lwjgl:${libs.versions.lwjgl.get()}:natives-macos"
+    testRuntimeOnly "org.lwjgl:lwjgl:${libs.versions.lwjgl.get()}:natives-macos-arm64"
+    testRuntimeOnly "org.lwjgl:lwjgl:${libs.versions.lwjgl.get()}:natives-windows"
+    testRuntimeOnly "org.lwjgl:lwjgl:${libs.versions.lwjgl.get()}:natives-windows-x86"
+    testRuntimeOnly "org.lwjgl:lwjgl:${libs.versions.lwjgl.get()}:natives-windows-arm64"
+
+    testRuntimeOnly "org.lwjgl:lwjgl-opengl:${libs.versions.lwjgl.get()}:natives-linux"
+    testRuntimeOnly "org.lwjgl:lwjgl-opengl:${libs.versions.lwjgl.get()}:natives-linux-arm64"
+    testRuntimeOnly "org.lwjgl:lwjgl-opengl:${libs.versions.lwjgl.get()}:natives-linux-arm32"
+    testRuntimeOnly "org.lwjgl:lwjgl-opengl:${libs.versions.lwjgl.get()}:natives-macos"
+    testRuntimeOnly "org.lwjgl:lwjgl-opengl:${libs.versions.lwjgl.get()}:natives-macos-arm64"
+    testRuntimeOnly "org.lwjgl:lwjgl-opengl:${libs.versions.lwjgl.get()}:natives-windows"
+    testRuntimeOnly "org.lwjgl:lwjgl-opengl:${libs.versions.lwjgl.get()}:natives-windows-x86"
+    testRuntimeOnly "org.lwjgl:lwjgl-opengl:${libs.versions.lwjgl.get()}:natives-windows-arm64"
+
+    testRuntimeOnly "org.lwjgl:lwjgl-vulkan:${libs.versions.lwjgl.get()}:natives-macos"
+    testRuntimeOnly "org.lwjgl:lwjgl-vulkan:${libs.versions.lwjgl.get()}:natives-macos-arm64"
+
+    testImplementation libs.junit.api
+    testRuntimeOnly  libs.junit.engine
+    testRuntimeOnly  libs.junit.launcher
+    testImplementation libs.image.comparison
+    testImplementation libs.joml
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+    }
+    withSourcesJar()
+    withJavadocJar()
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs = ['src']
+        }
+        resources {
+            srcDirs = ['res', 'native/macosx']
+        }
+    }
+    test {
+        java {
+            srcDirs = ['test']
+        }
+        resources {
+            srcDirs = ['test_res']
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Javadoc).configureEach {
+    options.addStringOption('Xdoclint:none', '-quiet')
+}
+
+tasks.test {
+    useJUnitPlatform()
+    workingDir = projectDir
+}
+
+tasks.jar {
+    manifest {
+        attributes(
+            'Implementation-Title':   project.name,
+            'Implementation-Version': project.version
+        )
+    }
+    // Include LICENSE in META-INF (mirrors Maven resources plugin behaviour)
+    from('LICENSE') { into 'META-INF' }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+
+            pom {
+                name = 'lwjgl3-awt'
+                description = project.description
+                url = 'https://github.com/jMonkeyEngine/lwjgl3-awt'
+                inceptionYear = '2016'
+
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'http://www.opensource.org/licenses/mit-license.php'
+                    }
+                }
+
+                organization {
+                    name = 'jMonkeyEngine'
+                    url = 'https://jmonkeyengine.org'
+                }
+
+                developers {
+                    developer {
+                        id = 'kburjack'
+                        name = 'Kai Burjack'
+                        email = 'kburjack@googlemail.com'
+                        organization = 'LWJGLX'
+                        organizationUrl = 'https://lwjglx.org'
+                    }
+                    developer {
+                        id = 'SWinxy'
+                        email = 'contact@swinxy.me'
+                    }
+                    developer {
+                        id = 'jMonkeyEngine'
+                        name = 'jMonkeyEngine Team'
+                    }
+                }
+
+                scm {
+                    url = 'https://github.com/jMonkeyEngine/lwjgl3-awt'
+                    connection = 'scm:git:https://github.com/jMonkeyEngine/lwjgl3-awt.git'
+                    developerConnection = 'scm:git:https://github.com/jMonkeyEngine/lwjgl3-awt.git'
+                }
+            }
+        }
+
+    }
+    repositories {
+        mavenLocal()
+    }
+}
+
+signing {
+    def keyRaw = System.getenv('SIGNING_KEY')
+    def pass   = System.getenv('SIGNING_PASSWORD') ?: findProperty('signingPassword')
+
+    def signingKey =
+            keyRaw ? keyRaw :
+            findProperty('signingKey')
+
+    if (signingKey) {
+        useInMemoryPgpKeys(signingKey.toString(), pass?.toString())
+        sign(publishing.publications)
+    }
+}
+
+nexusPublishing {
+    repositories {
+        sonatype {            
+            nexusUrl = uri("https://ossrh-staging-api.central.sonatype.com/service/local/")
+            snapshotRepositoryUrl = uri("https://central.sonatype.com/repository/maven-snapshots/")
+            username = (System.getenv("OSSRH_USERNAME") ?: findProperty("ossrhUsername"))?.toString()
+            password = (System.getenv("OSSRH_PASSWORD") ?: findProperty("ossrhPassword"))?.toString()
+        }
+    }
+}
+
+import org.gradle.api.publish.maven.tasks.AbstractPublishToMaven
+import org.gradle.api.publish.maven.tasks.PublishToMavenLocal
+import org.gradle.api.publish.maven.tasks.PublishToMavenRepository
+
+tasks.withType(AbstractPublishToMaven).configureEach { t ->
+    doFirst {
+        def p = t.publication
+        def coords = "${p.groupId}:${p.artifactId}:${p.version}"
+
+        if (t instanceof PublishToMavenRepository) {
+            println "Publishing ${coords} -> ${t.repository.url} [${t.repository.name}]"
+        } else if (t instanceof PublishToMavenLocal) {
+            println "Publishing ${coords} -> mavenLocal()"
+        } else {
+            println "Publishing ${coords}"
+        }
+    }
+}
