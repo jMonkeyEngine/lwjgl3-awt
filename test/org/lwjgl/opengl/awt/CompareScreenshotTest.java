@@ -284,9 +284,11 @@ public class CompareScreenshotTest {
         // Some Operating Systems have a window open/close animation, so we wait until the screenshot is stable
         while (true) {
             // Pause at least 500 milliseconds between captures
-            long pauseStartTime = System.currentTimeMillis();
-            while (System.currentTimeMillis() - pauseStartTime < 500) {
-                Thread.yield();
+            try {
+                Thread.sleep(500);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Thread interrupted during screenshot delay", e);
             }
 
             BufferedImage s = rbt.createScreenCapture(frameBounds);
