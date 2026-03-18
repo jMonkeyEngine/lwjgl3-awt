@@ -283,6 +283,12 @@ public class CompareScreenshotTest {
         BufferedImage background = rbt.createScreenCapture(frameBounds);
         // Some Operating Systems have a window open/close animation, so we wait until the screenshot is stable
         while (true) {
+            // Pause at least 500 milliseconds between captures
+            long pauseStartTime = System.currentTimeMillis();
+            while (System.currentTimeMillis() - pauseStartTime < 500) {
+                Thread.yield();
+            }
+
             BufferedImage s = rbt.createScreenCapture(frameBounds);
             if (new ImageComparison(background, s).compareImages().getDifferencePercent() == 0) {
                 break;
