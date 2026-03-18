@@ -59,7 +59,7 @@ dependencies {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(8)
+        languageVersion = JavaLanguageVersion.of(21)
     }
     withSourcesJar()
     withJavadocJar()
@@ -86,6 +86,7 @@ sourceSets {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+    options.release = 8
 }
 
 tasks.withType(Javadoc).configureEach {
@@ -95,6 +96,7 @@ tasks.withType(Javadoc).configureEach {
 tasks.test {
     useJUnitPlatform()
     workingDir = projectDir
+    timeout = Duration.ofMinutes(15)
 }
 
 tasks.jar {

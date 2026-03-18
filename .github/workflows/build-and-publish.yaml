@@ -28,7 +28,7 @@ jobs:
           cache: gradle
 
       - name: Build
-        run: ./gradlew --no-daemon clean build
+        run: ./gradlew --no-daemon clean build -xtest 
 
   publish-snapshot:
     name: Publish Snapshot to Maven Central

@@ -297,8 +297,11 @@ public class CompareScreenshotTest {
             screenShotSuffix = "_" + screenShotIndex;
         }
 
+        File outputDir = new File("build/test-screenshots");
+        outputDir.mkdirs();
+
         ImageIO.write(background, "png", new File(
-                new File("target"),
+                outputDir,
                 System.getProperty("os.name") + "_" +
                         testInfo.getTestClass().map(Class::getSimpleName).orElse("unknown") + "_" +
                         testInfo.getTestMethod().map(Method::getName).orElse("unknown") + screenShotSuffix + ".png"));
@@ -312,7 +315,7 @@ public class CompareScreenshotTest {
                 testInfo.getTestMethod().map(Method::getName).orElse("unknown") + screenShotSuffix + ".png"));
 
         File resultDestination = new File(
-                new File("target"),
+                outputDir,
                 System.getProperty("os.name") + "_" +
                         testInfo.getTestClass().map(Class::getSimpleName).orElse("unknown") + "_" +
                         testInfo.getTestMethod().map(Method::getName).orElse("unknown") + screenShotSuffix + "_diff.png");
