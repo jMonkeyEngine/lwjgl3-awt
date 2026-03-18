@@ -28,11 +28,11 @@ jobs:
           cache: gradle
 
       - name: Build
-        run: ./gradlew --no-daemon clean build -xtest 
+        run: ./gradlew --no-daemon clean build -xtest
 
   publish-snapshot:
     name: Publish Snapshot to Maven Central
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
 
     permissions:
